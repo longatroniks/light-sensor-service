@@ -96,20 +96,31 @@ function renderBuilding() {
         // Bulb information
         const bulbsContainer = document.createElement("div");
         bulbsContainer.className = "flex flex-wrap gap-1 mt-2";
-        Object.entries(roomData.bulbs).forEach(([id, intensity]) => {
+        Object.entries(roomData.bulbs).forEach(([id, bulbData]) => {
+          // Extract intensity and capacity
+          const { intensity, capacity } = bulbData;
+
           const bulb = document.createElement("div");
-          bulb.className = `flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+          bulb.className = `flex flex-col items-start px-2 py-1 text-xs rounded-md border ${
             intensity === "off"
-              ? "bg-gray-200 text-gray-500"
+              ? "bg-gray-200 text-gray-500 border-gray-300"
               : intensity === "low"
-              ? "bg-red-200 text-red-600"
+              ? "bg-red-200 text-red-600 border-red-400"
               : intensity === "medium"
-              ? "bg-yellow-200 text-yellow-700"
-              : "bg-green-200 text-green-600"
+              ? "bg-yellow-200 text-yellow-700 border-yellow-400"
+              : "bg-green-200 text-green-600 border-green-400"
           }`;
 
-          // Adding the bulb icon and intensity details
-          bulb.innerHTML = `<i class="fas fa-lightbulb"></i> ${id}: ${intensity}`;
+          // Adding the bulb icon, intensity, and capacity details
+          bulb.innerHTML = `
+            <div class="flex items-center gap-1">
+              <i class="fas fa-lightbulb"></i>
+              <span>${id}</span>
+            </div>
+            <div>Intensity: ${intensity}</div>
+            <div>Capacity: ${capacity}%</div>
+          `;
+
           bulbsContainer.appendChild(bulb);
         });
 
