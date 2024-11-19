@@ -21,8 +21,14 @@ threads = {}
 def create_mqtt_client(client_id):
     client = mqtt_client.Client(client_id, protocol=mqtt_client.MQTTv311)
     client.username_pw_set(USERNAME, PASSWORD)
+
+    lwt_topic = f"building/status/{client_id}"
+    lwt_message = json.dumps({"status": "disconnected"})
+    client.will_set(lwt_topic, lwt_message, qos=1, retain=True)
+
     client.connect(BROKER, PORT)
     return client
+
 
 # Light Sensor Function
 def light_sensor(floor, room):
@@ -73,7 +79,7 @@ def light_sensor(floor, room):
             # Publish brightness to the room's topic
             topic = f"building/{floor}_{room}/light_sensor"
             msg = {"brightness": brightness_level, "mode": current_mode}
-            client.publish(topic, json.dumps(msg))
+            client.publish(topic, json.dumps(msg), qos=1)
             room_data[floor][room]["sensor_data"] = msg
 
             time.sleep(2)
@@ -100,7 +106,7 @@ def room_controller(floor, room):
                 room_data[floor][room]["bulbs"][bulb] = intensity
 
             topic = f"building/{floor}_{room}/room_controller"
-            client.publish(topic, json.dumps({"intensity": intensity}))
+            client.publish(topic, json.dumps({"intensity": intensity}), qos=1)
         except Exception as e:
             print(f"[ERROR] Controller error for room {room}: {e}")
 
@@ -108,7 +114,7 @@ def room_controller(floor, room):
     client = create_mqtt_client(client_id)
 
     topic = f"building/{floor}_{room}/light_sensor"
-    client.subscribe(topic)
+    client.subscribe(topic, qos=1)
     client.on_message = on_message
 
     client.loop_forever()
