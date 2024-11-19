@@ -168,5 +168,31 @@ async function handleAddBulb() {
   }
 }
 
+async function handleModeChange(floor, room) {
+  const selectEl = document.getElementById(`sensorMode_${floor}_${room}`);
+  const newMode = selectEl.value;
+
+  console.log("Sending mode change request:", { floor, room, mode: newMode }); // Debugging line
+
+  try {
+      const response = await fetch('/toggle_mode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ floor, room, mode: newMode }) // Correct payload
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+          console.error("Error:", result.error);
+          showError(result.error || 'Failed to update sensor mode');
+      } else {
+          console.log(result.message);
+      }
+  } catch (error) {
+      console.error('Error updating sensor mode:', error);
+      showError('Failed to update sensor mode');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', fetchData);
 setInterval(fetchData, 5000);
