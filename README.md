@@ -21,8 +21,7 @@ This project implements a building management system with light sensors and room
 - **Python Version**: Use Python 3.x
 - **Dependencies**:
   - Flask
-  - paho-mqtt==1.6.1 (for Windows)
-  - paho-mqtt==2.1.0 (for Debian)
+  - paho-mqtt==1.6.1
 
 ### Additional Tools
 - Mosquitto MQTT Broker
