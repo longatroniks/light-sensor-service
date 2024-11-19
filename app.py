@@ -44,14 +44,31 @@ def light_sensor(floor, room):
                 brightness_level = random.randint(0, 100)  # Random brightness for test mode
             elif current_mode == "normal":
                 current_hour = time.localtime().tm_hour
-                if 6 <= current_hour < 19:
-                    brightness_level = 0  # Daytime: lights off
-                elif 19 <= current_hour < 22:
-                    brightness_level = 50  # Evening: medium brightness
+                current_minute = time.localtime().tm_min
+
+                # Morning hours with gradual brightness increase
+                if 6 <= current_hour < 8:
+                    brightness_level = int((current_hour - 6) * 30 + (current_minute / 60) * 30)  # Gradual increase from 0 to 60
+                # Daytime hours with high brightness during active daylight (8 AM to 1 PM)
+                elif 8 <= current_hour < 13:
+                    brightness_level = 100  # High brightness for active daylight hours
+                # Afternoon hours with moderate brightness (1 PM to 6 PM)
+                elif 13 <= current_hour < 18:
+                    brightness_level = 60  # Moderate brightness during afternoon
+                # Evening hours with gradual brightness decrease
+                elif 18 <= current_hour < 20:
+                    brightness_level = int(60 - (current_hour - 18) * 30 - (current_minute / 60) * 30)  # Gradual decrease from 60 to 30
+                # Night hours with low brightness
+                elif 20 <= current_hour < 22:
+                    brightness_level = 30  # Consistent medium brightness in early night
+                # Late night with minimal brightness
+                elif 22 <= current_hour <= 23:
+                    brightness_level = int(30 - (current_hour - 22) * 15 - (current_minute / 60) * 15)  # Gradual decrease from 30 to 15
+                # Midnight to early morning with very low brightness
+                elif 0 <= current_hour < 6:
+                    brightness_level = 10  # Minimal brightness
                 else:
-                    brightness_level = 25  # Night: low brightness
-            else:
-                brightness_level = 0  # Default fallback brightness
+                    brightness_level = 0  # Default fallback brightness
 
             # Publish brightness to the room's topic
             topic = f"building/{floor}_{room}/light_sensor"
