@@ -1,5 +1,5 @@
 # Ignore virtual environments
-venv/
+venv
 
 # Byte-compiled / cache files
 __pycache__/

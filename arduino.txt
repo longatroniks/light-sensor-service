@@ -1,0 +1,139 @@
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+
+// Configuración de red WiFi
+const char* ssid = "Alejandro";
+const char* password = "Alejandro123";
+
+// Configuración de MQTT
+const char* mqtt_server = "Change";
+const int mqtt_port = 1883;
+const char* mqtt_user = "emqx";
+const char* mqtt_password = "public";
+
+// Tópicos para control de LEDs
+const char* topic_lab5 = "building/2_Lab5/room_controller"; // Dos LEDs
+const char* topic_office = "building/4_office/room_controller"; // Un LED
+const char* topic_cafe = "building/8_cafe/room_controller"; // Un LED
+
+// Pines de los LEDs
+const int ledLab5_1 = 2; // LED 1 del laboratorio
+const int ledLab5_2 = 4; // LED 2 del laboratorio
+const int ledOffice = 5; // LED de la oficina
+const int ledCafe = 18;  // LED de la cafetería
+
+// WiFi y MQTT client
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+// Función para conectar al WiFi
+void setup_wifi() {
+  delay(10);
+  Serial.println();
+  Serial.print("Conectando a ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("\nWiFi conectado");
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+}
+
+// Función para establecer brillo basado en intensidad
+int getBrightness(const char* intensity) {
+  if (strcmp(intensity, "low") == 0) {
+    return 20; // Baja intensidad (33%)
+  } else if (strcmp(intensity, "medium") == 0) {
+    return 130; // Intensidad media (66%)
+  } else if (strcmp(intensity, "high") == 0) {
+    return 255; // Alta intensidad (100%)
+  }
+  return 0; // Apagado
+}
+
+// Callback de MQTT
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Mensaje recibido en tópico: ");
+  Serial.println(topic);
+
+  // Convertir mensaje a JSON
+  StaticJsonDocument<200> doc;
+  DeserializationError error = deserializeJson(doc, payload, length);
+
+  if (error) {
+    Serial.print("Error al parsear JSON: ");
+    Serial.println(error.c_str());
+    return;
+  }
+
+  const char* intensity = doc["intensity"];
+
+  // Ajustar LEDs según el tópico
+  if (strcmp(topic, topic_lab5) == 0) {
+    int brightness = getBrightness(intensity);
+    analogWrite(ledLab5_1, brightness);
+    analogWrite(ledLab5_2, brightness);
+    Serial.printf("Lab5 LEDs ajustados a intensidad %s (brillo %d)\n", intensity, brightness);
+  } else if (strcmp(topic, topic_office) == 0) {
+    int brightness = getBrightness(intensity);
+    analogWrite(ledOffice, brightness);
+    Serial.printf("Office LED ajustado a intensidad %s (brillo %d)\n", intensity, brightness);
+  } else if (strcmp(topic, topic_cafe) == 0) {
+    int brightness = getBrightness(intensity);
+    analogWrite(ledCafe, brightness);
+    Serial.printf("Cafe LED ajustado a intensidad %s (brillo %d)\n", intensity, brightness);
+  }
+}
+
+// Función para reconectar al MQTT broker
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Intentando conectar a MQTT...");
+    if (client.connect("ArduinoClient", mqtt_user, mqtt_password)) {
+      Serial.println("Conectado");
+      client.subscribe(topic_lab5);
+      client.subscribe(topic_office);
+      client.subscribe(topic_cafe);
+    } else {
+      Serial.print("Error, rc=");
+      Serial.print(client.state());
+      Serial.println(" Intentando de nuevo en 5 segundos");
+      delay(5000);
+    }
+  }
+}
+
+void setup() {
+  // Configuración inicial
+  Serial.begin(115200);
+  setup_wifi();
+
+  client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(callback);
+
+  // Configurar pines de LEDs como salida
+  pinMode(ledLab5_1, OUTPUT);
+  pinMode(ledLab5_2, OUTPUT);
+  pinMode(ledOffice, OUTPUT);
+  pinMode(ledCafe, OUTPUT);
+
+  // Inicializar LEDs apagados
+  analogWrite(ledLab5_1, 0);
+  analogWrite(ledLab5_2, 0);
+  analogWrite(ledOffice, 0);
+  analogWrite(ledCafe, 0);
+}
+
+void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+}
