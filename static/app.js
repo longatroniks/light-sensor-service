@@ -18,16 +18,6 @@ function hideError() {
   document.getElementById('errorAlert').classList.add('hidden');
 }
 
-async function fetchData() {
-  try {
-    const response = await fetch('/data');
-    data = await response.json();
-    renderBuilding();
-  } catch (err) {
-    showError('Failed to fetch building data');
-  }
-}
-
 function renderBuilding() {
   const buildingEl = document.getElementById('building');
   buildingEl.innerHTML = '';
@@ -55,27 +45,40 @@ function renderBuilding() {
     if (expandedFloors[floor]) {
       const content = document.createElement('div');
       content.className = 'mt-4';
+
       Object.entries(floorData).forEach(([room, roomData]) => {
         const roomEl = document.createElement('div');
         roomEl.className = 'bg-gray-50 rounded-lg p-4 mb-4';
 
+        // Room header
         const roomHeader = `
           <div class="flex items-center justify-between">
             <h3 class="font-semibold text-lg">${room}</h3>
             <span class="text-sm text-gray-500">${Object.keys(roomData.bulbs).length} bulbs</span>
           </div>
         `;
-        roomEl.innerHTML = roomHeader;
 
-        const sensorData = `<p class="text-sm text-gray-600">Sensor Data: ${JSON.stringify(roomData.sensor_data)}</p>`;
-        const controllerData = `<p class="text-sm text-gray-600">Controller Data: ${JSON.stringify(roomData.controller_data)}</p>`;
-        roomEl.innerHTML += sensorData + controllerData;
+        // Sensor and Controller Data
+        const sensorData = JSON.stringify(roomData.sensor_data, null, 2) || "No data yet";
+        const controllerData = JSON.stringify(roomData.controller_data, null, 2) || "No data yet";
 
+        const sensorAndControllerSection = `
+
+          <div class="text-xs font-mono text-gray-800 bg-gray-100 px-3 py-2 rounded border border-gray-300 overflow-auto">
+            <pre class="whitespace-pre-wrap">${sensorData.replace(/[{}]/g, '')}${controllerData.replace(/[{}]/g, '')}</pre>
+          </div>
+      `;
+      
+
+        roomEl.innerHTML = roomHeader + sensorAndControllerSection;
+
+        // Bulb information
         const bulbsContainer = document.createElement('div');
         bulbsContainer.className = 'mt-4 flex flex-wrap gap-2';
         Object.entries(roomData.bulbs).forEach(([id, intensity]) => {
           const bulb = document.createElement('div');
           bulb.className = `flex items-center gap-2 px-3 py-1 rounded-full ${
+            intensity === 'off' ? 'bg-gray-200 text-gray-600' :
             intensity === 'low' ? 'bg-red-50 text-red-500' :
             intensity === 'medium' ? 'bg-yellow-50 text-yellow-500' :
             'bg-green-50 text-green-500'
@@ -83,15 +86,18 @@ function renderBuilding() {
           bulb.innerHTML = `<i class="fas fa-lightbulb"></i><span class="text-sm font-medium">Bulb ${id}: ${intensity}</span>`;
           bulbsContainer.appendChild(bulb);
         });
+
         roomEl.appendChild(bulbsContainer);
         content.appendChild(roomEl);
       });
+
       floorEl.appendChild(content);
     }
 
     buildingEl.appendChild(floorEl);
   });
 }
+
 
 function toggleFloor(floor) {
   expandedFloors[floor] = !expandedFloors[floor];
@@ -111,7 +117,7 @@ async function handleAddRoom() {
     if (response.ok) {
       document.getElementById('roomFloor').value = '';
       document.getElementById('newRoom').value = '';
-      fetchData();  // Refresh the display
+      fetchData(); // Refresh the display
     } else {
       const errorData = await response.json();
       showError(errorData.error || 'Failed to add room');
@@ -123,30 +129,27 @@ async function handleAddRoom() {
 }
 
 async function handleAddFloor() {
-    const floorName = document.getElementById('newFloor').value.trim();
-    if (!floorName) return showError('Please enter a floor name');
-    
-    try {
-      const response = await fetch('/add_floor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ floor_name: floorName })
-      });
-      if (response.ok) {
-        console.log(`Floor "${floorName}" added successfully.`);
-        document.getElementById('newFloor').value = '';
-        fetchData();  // Refresh the display
-      } else {
-        const errorData = await response.json();
-        console.error('Error:', errorData);
-        showError(errorData.error || 'Failed to add floor');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      showError('Failed to add floor');
-    }
-  }
+  const floorName = document.getElementById('newFloor').value.trim();
+  if (!floorName) return showError('Please enter a floor name');
   
+  try {
+    const response = await fetch('/add_floor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ floor_name: floorName })
+    });
+    if (response.ok) {
+      document.getElementById('newFloor').value = '';
+      fetchData(); // Refresh the display
+    } else {
+      const errorData = await response.json();
+      showError(errorData.error || 'Failed to add floor');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showError('Failed to add floor');
+  }
+}
 
 async function handleAddBulb() {
   const floor = document.getElementById('bulbFloor').value.trim();
@@ -154,45 +157,64 @@ async function handleAddBulb() {
   const bulbId = document.getElementById('newBulb').value.trim();
   if (!floor || !room || !bulbId) return showError('Please enter floor, room, and bulb ID');
   try {
-    await fetch('/add_bulb', {
+    const response = await fetch('/add_bulb', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ floor, room, bulb_id: bulbId })
     });
-    document.getElementById('bulbFloor').value = '';
-    document.getElementById('bulbRoom').value = '';
-    document.getElementById('newBulb').value = '';
-    fetchData();
-  } catch {
+    if (response.ok) {
+      document.getElementById('bulbFloor').value = '';
+      document.getElementById('bulbRoom').value = '';
+      document.getElementById('newBulb').value = '';
+      fetchData();
+    } else {
+      const errorData = await response.json();
+      showError(errorData.error || 'Failed to add bulb');
+    }
+  } catch (error) {
+    console.error('Error:', error);
     showError('Failed to add bulb');
   }
 }
 
-async function handleModeChange(floor, room) {
-  const selectEl = document.getElementById(`sensorMode_${floor}_${room}`);
-  const newMode = selectEl.value;
-
-  console.log("Sending mode change request:", { floor, room, mode: newMode }); // Debugging line
-
+async function fetchData() {
   try {
-      const response = await fetch('/toggle_mode', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ floor, room, mode: newMode }) // Correct payload
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-          console.error("Error:", result.error);
-          showError(result.error || 'Failed to update sensor mode');
-      } else {
-          console.log(result.message);
-      }
-  } catch (error) {
-      console.error('Error updating sensor mode:', error);
-      showError('Failed to update sensor mode');
+    const response = await fetch('/data'); // Ensure this matches your Flask route
+    data = await response.json();
+    renderBuilding();
+  } catch (err) {
+    showError('Failed to fetch building data');
   }
 }
+
+async function handleModeChange() {
+  const modeSelector = document.getElementById('sensorModeGlobal');
+  const newMode = modeSelector.value;
+
+  try {
+    const response = await fetch('/toggle_mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: newMode }), // Update global mode only
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      showError(errorData.error || 'Failed to update global sensor mode');
+      return;
+    }
+
+    const result = await response.json();
+    console.log(result.message);
+
+    // Refresh the data to reflect changes
+    fetchData();
+  } catch (error) {
+    console.error('Error updating global sensor mode:', error);
+    showError('Failed to update global sensor mode');
+  }
+}
+
 
 document.addEventListener('DOMContentLoaded', fetchData);
 setInterval(fetchData, 5000);

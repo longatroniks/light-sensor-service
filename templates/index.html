@@ -11,24 +11,22 @@
 
   <div class="max-w-6xl mx-auto">
     <!-- Header -->
-    <header class="flex items-center justify-between mb-8">
-      <div class="flex items-center gap-3">
+    <header class="flex flex-wrap items-center justify-between mb-8 gap-4">
+      <div class="flex items-center gap-3 flex-grow">
         <i class="fas fa-building text-blue-600 text-3xl"></i>
-        <h1 class="text-3xl font-bold text-gray-800">Building Management System</h1>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Building Management System</h1>
       </div>
       <button onclick="toggleInstructions()" class="flex items-center gap-2 text-blue-600 hover:text-blue-700">
         <i class="fas fa-info-circle"></i>
         <span id="instructionsToggleText">Hide Instructions</span>
       </button>
-      <div class="flex items-center gap-2">
-        <label for="sensorMode" class="text-sm font-medium">Sensor Mode:</label>
-        <select id="sensorMode_1_1" onchange="handleModeChange('1', '1')" class="p-2 border rounded">
-          <option value="test" selected>Test</option>
-          <option value="normal">Normal</option>
-      </select>
-      
-    </div>
-    
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <label for="sensorModeGlobal" class="text-sm font-medium">Global Sensor Mode:</label>
+        <select id="sensorModeGlobal" onchange="handleModeChange()" class="p-2 border rounded w-full sm:w-auto">
+          <option value="normal" selected>Normal</option>
+          <option value="test">Test</option>
+        </select>
+      </div>
     </header>
 
     <!-- Instructions Panel -->
@@ -72,7 +70,7 @@
       <!-- Add Floor -->
       <div class="bg-white rounded-lg shadow-lg p-6">
         <h2 class="text-lg font-semibold mb-4">Add Floor</h2>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <input type="text" id="newFloor" placeholder="Floor name" class="flex-1 p-2 border rounded focus:outline-none">
           <button onclick="handleAddFloor()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fas fa-plus"></i></button>
         </div>
@@ -81,9 +79,9 @@
       <!-- Add Room -->
       <div class="bg-white rounded-lg shadow-lg p-6">
         <h2 class="text-lg font-semibold mb-4">Add Room</h2>
-        <input type="text" id="roomFloor" placeholder="Floor name" class="w-full p-2 border rounded mb-2 focus:outline-none">
-        <div class="flex gap-2">
-          <input type="text" id="newRoom" placeholder="Room name" class="flex-1 p-2 border rounded focus:outline-none">
+        <div class="flex flex-wrap gap-2">
+          <input type="text" id="roomFloor" placeholder="Floor name" class="w-full p-2 border rounded focus:outline-none">
+          <input type="text" id="newRoom" placeholder="Room name" class="w-full flex-1 p-2 border rounded focus:outline-none">
           <button onclick="handleAddRoom()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fas fa-plus"></i></button>
         </div>
       </div>
@@ -91,10 +89,10 @@
       <!-- Add Bulb -->
       <div class="bg-white rounded-lg shadow-lg p-6">
         <h2 class="text-lg font-semibold mb-4">Add Bulb</h2>
-        <input type="text" id="bulbFloor" placeholder="Floor name" class="w-full p-2 border rounded mb-2 focus:outline-none">
-        <input type="text" id="bulbRoom" placeholder="Room name" class="w-full p-2 border rounded mb-2 focus:outline-none">
-        <div class="flex gap-2">
-          <input type="text" id="newBulb" placeholder="Bulb ID" class="flex-1 p-2 border rounded focus:outline-none">
+        <div class="flex flex-wrap gap-2">
+          <input type="text" id="bulbFloor" placeholder="Floor name" class="w-full p-2 border rounded focus:outline-none">
+          <input type="text" id="bulbRoom" placeholder="Room name" class="w-full p-2 border rounded focus:outline-none">
+          <input type="text" id="newBulb" placeholder="Bulb ID" class="w-full flex-1 p-2 border rounded focus:outline-none">
           <button onclick="handleAddBulb()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fas fa-plus"></i></button>
         </div>
       </div>
@@ -104,7 +102,6 @@
     <div id="building" class="space-y-4"></div>
   </div>
 
-  <!-- Link to External JavaScript File -->
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
