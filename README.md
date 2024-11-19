@@ -126,7 +126,7 @@ Room Controller: Published `{"intensity": "high"}` to `building/1_1/room_control
    pip install -r requirements.txt
    ```
 
-4. **Setup Tools**
+4. **Setup Tools**:
    In Debian, after creating a new venv, sometimes installing `paho-mqtt` results in an error because this package is missing.
 
 ### Known Limitations
