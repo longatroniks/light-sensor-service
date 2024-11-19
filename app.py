@@ -94,11 +94,13 @@ def room_controller(floor, room):
             )
 
             room_data[floor][room]["controller_data"] = {"intensity": intensity}
-            for bulb in room_data[floor][room]["bulbs"]:
-                room_data[floor][room]["bulbs"][bulb] = intensity
+            
+            # Publish to each bulb's topic
+            for bulb_id in room_data[floor][room]["bulbs"]:
+                bulb_topic = f"building/{floor}/{room}/bulbs/{bulb_id}"
+                room_data[floor][room]["bulbs"][bulb_id] = intensity
+                client.publish(bulb_topic, json.dumps({"intensity": intensity}), qos=1)
 
-            topic = f"building/{floor}/{room}/room_controller"
-            client.publish(topic, json.dumps({"intensity": intensity}), qos=1)
         except Exception as e:
             print(f"[ERROR] Controller error for room {room}: {e}")
 
@@ -110,6 +112,7 @@ def room_controller(floor, room):
     client.on_message = on_message
 
     client.loop_forever()
+
 
 # Flask Routes
 @app.route("/")
@@ -162,7 +165,15 @@ def add_bulb():
         return jsonify({"error": "Bulb already exists"}), 400
 
     room_data[floor][room]["bulbs"][bulb_id] = "off"
+
+    # Publish initial state for the bulb
+    client_id = f"bulb-{floor}-{room}-{bulb_id}"
+    client = create_mqtt_client(client_id)
+    bulb_topic = f"building/{floor}/{room}/bulbs/{bulb_id}"
+    client.publish(bulb_topic, json.dumps({"intensity": "off"}), qos=1)
+
     return jsonify({"message": f"Bulb {bulb_id} added"}), 200
+
 
 @app.route("/toggle_mode", methods=["POST"])
 def toggle_mode():
