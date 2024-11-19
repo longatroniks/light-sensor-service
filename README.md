@@ -43,14 +43,9 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
 ### 3. Install Dependencies
-#### For Windows:
+#### Paho-Mqtt:
 ```bash
 pip install Flask paho-mqtt==1.6.1
-```
-
-#### For Debian:
-```bash
-pip install Flask paho-mqtt==2.1.0
 ```
 
 ### 4. Start Mosquitto Broker
